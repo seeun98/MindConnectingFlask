@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script>
+
+        function move(){
+            //1.서버에 버튼 이름 넘기기
+            alert("move 함수 눌림")
+            let name = $("#schedule").val()
+
+            $.ajax({
+                type: "POST",
+                url: "/index",
+                data: { name : name},
+                success: function (response) {
+                    if (response["result"] == "success") {
+                        alert(response["msg"]);
+                        window.location.reload();
+                    }
+                }
+            })
+
+        }
+    </script>
+</head>
+<body>
+<button onclick()="move()" id="schedule">문학과 내러티브</button>
+
+</body>
+</html>
