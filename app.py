@@ -1,36 +1,66 @@
 from flask import Flask, render_template, request, jsonify
 from pymongo import MongoClient
 from datetime import datetime
+import flask_admin
 import uuid
+from flask_admin.contrib.pymongo import ModelView
 
 client = MongoClient('localhost', 27017)
 db = client.mindConnecting
 
 app = Flask(__name__)
+#set optional bootwatch theme
 
 @app.route("/")
 def home():
     return render_template('index.html')
 
-@app.route("/login", methods=['GET', 'POST'])
+# @app.route("/professorIndex", methods=['GET'])
+# def professorHome():
+#     return render_template("professorIndex.html")
+
+@app.route("/professorOfficeForm", methods=['GET'])
+def professorOfficeForm():
+    return render_template("professorOfficeForm.html")
+
+@app.route("/professorStatus", methods=['POST'])
+def professorStatus():
+    name = request.form['name']
+    status1 = request.form['status1']
+    status2 = request.form['status2']
+    status3 = request.form['status3']
+    status4 = request.form['status4']
+
+    professorStatusInfo = {
+        'name' : name,
+        'status1' : status1,
+        'status2' : status2,
+        'status3' : status3,
+        'status4' : status4
+
+    }
+    db.professorStatus.insert_one(professorStatusInfo)
+    return jsonify({'result':'success','msg':'교수님 상태 입력 성공'})
+
+@app.route("/login", methods=['GET'])
 def login():
     if request.method == 'GET':
         return render_template('login.html')
+
+
+
+@app.route("/login_post", methods=['POST'])
+def login_post():
+    ids = request.form['id']
+    pws = request.form['password']
+
+    loginInfo = db.member.find_one({'id': ids, 'password' : pws}, {'is_student' : 1, '_id':0})
+    print(loginInfo)
+    if loginInfo is None:
+        return jsonify({'result':'fail','msg':'로그인 실패'})
     else:
-        id = request.form['id']
-        pw = request.form['password']
+        return jsonify({'result':'success','msg':'로그인 성공','item':loginInfo})
 
-        memberInformation = {
-            'id' : id,
-            'password' : pw
-        }
-
-        #db의 아이디,비밀번호와 입력된 정보가 맞는지 확인
-
-
-
-
-        return jsonify({'result':'success', 'msg' : 'login success'})
 
 @app.route("/joinus", methods=['GET', 'POST'])
 def joinus():
@@ -39,6 +69,7 @@ def joinus():
     else:
         id = request.form['id']
         pw = request.form['password']
+        name = request.form['name']
         email = request.form['email']
         is_student = request.form['is_student']
         department = request.form['department']
@@ -46,6 +77,7 @@ def joinus():
         information = {
             'id' : id,
             'password' : pw,
+            'name' : name,
             'email' : email,
             'is_student' : is_student,
             'department' : department
@@ -56,43 +88,32 @@ def joinus():
 
 
 
+@app.route("/professorIndexList", methods=['GET'])
+def index_get():
+    return render_template("professorIndex.html")
 
-@app.route("/index", methods=['GET'])
-def index():
-    return render_template('index.html')
+@app.route("/professorIndex", methods=['GET'])
+def schedule_list():
+    schedules_list = [x for x in list(db.schedule.find({},{'_id':0, 'subject':1, 'professor':1, 'time_location':1, 'code':1}))]
+    # print(schedules_list)
+    professor_status_list = [x for x in list(db.professorStatus.find({},{'_id':0}))]
+    for psl in professor_status_list:
+        # psl은 교수님 재실 상태 데이터
+        for sc in schedules_list:
+            if psl.get('name') == sc.get('professor'):
+                sc['status1'] = psl.get('status1')
+                sc['status2'] = psl.get('status2')
+                sc['status3'] = psl.get('status3')
+                sc['status4'] = psl.get('status4')
+
+    # 재실 데이터가져오기
+    # 재실 데이터 vs 스케쥴 리스트 데이터비
+    # 비교 후, 해당하는 교수님 데이터에 새로운 key값 추가하기
+    return jsonify({'result': 'success', 'items': schedules_list})
 
 @app.route("/index", methods=['POST'])
 def indexPost():
-        # name = request.form['name']
-        #
-        # scheduleList = list(db.schedule.find({}))
-        #
-        #
-        # for i in scheduleList:
-        #     if name == scheduleList[i]['subject']:
-        #         print(name)
-        #         #여기의 code를 가져온다.
-        #         #code에 맞는 professorCommunicate 페이지로 보내준다.
     return render_template("index.html")
-
-# #professorCommunicate_list
-# #시간표 누를 시 -> 그 code에 해당하는 메인페이지인(교수님 공지 게시판)이 나온다
-# @app.route("/professorCommunicatelist/<code>", methods=['GET'])
-# def professorCommunicatelist_get(code):
-#     professorCommunicate_list = list(db.professorQuestion.find({'code': code},{'_id': 0}))
-#     print(professorCommunicate_list)
-#     return jsonify({'result':'success', 'items': professorCommunicate_list})
-#
-#
-# @app.route("/professorCommunicate/<code>", methods=['GET'])
-# def professorCommunicate(code):
-#     return render_template("professorCommunicatelist.html", code=code)
-#
-# @app.route("/QuestionFrom", methods=['GET'])
-# def QuestionForm():
-#     return render_template("professorCommunicateQuestionForm.html")
-
-
 
 
 #-----------------------------------------------------------------------------------------------------------------
@@ -129,12 +150,22 @@ def communicate_post():
     return jsonify({'result': 'success'})
 
 
+
+
 @app.route("/review_page/<code>/<communicate_id>", methods=['GET'])
 def review_page(code, communicate_id):
     return render_template("communicateRE.html", code = code, communicate_id = communicate_id)
 
 # 댓글 구성요소
 # id, communicate_id, content
+# 댓글 한 요소 들고 오기
+
+@app.route("/review_page/<code>/<communicate_id>/element", methods=['GET'])
+def element(code, communicate_id):
+    element_list = list(db.communicate.find({'code': code, 'communicate_id' : communicate_id},{'_id':0}))
+    print(element_list)
+    return jsonify({'result' : 'success', 'items' : element_list})
+
 #댓글 불러오기
 @app.route("/review_page/<code>/<communicate_id>/comments", methods=['GET'])
 def review_page_comments_list(communicate_id, comment_id, content):
@@ -164,15 +195,13 @@ def comment_page_post():
 #댓글 등록 누를때 댓글 데이터베이스에 저장하기
 @app.route("/comment/<communicate_id>", methods=['GET'])
 def comment_page_get(communicate_id):
-    found_comments = list(db.communicateComment.find({'communicate_id': communicate_id}, {'_id': False}))
+    # print(communicate_id)
+    found_comments = list(db.communicateComment.find({'code': communicate_id},{'_id':0}))
+    # print(found_comments)
     return jsonify({'result': 'success', 'items': found_comments})
 
-#------댓글 페이지--------------
-#게시글 하나 눌렀을때 -> 그 게시글에 대한 댓글 페이지로 넘어감
-#1. 그 게시글에 대한 페이지 보여주기
-#2. 댓글등록 누르면 디비에 저장 후 페이지 새로고침
-#@app.route("/communicate/<code>/REcomments", methods="POST")
-#def communicateREcomments():
+
+
 
 
 if __name__ == '__main__':

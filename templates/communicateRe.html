@@ -11,7 +11,7 @@
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <!-- 구글 폰트 -->
     <link href="https://fonts.googleapis.com/css?family=Do+Hyeon&amp;display=swap" rel="stylesheet">
-{#    <link href="{{ url_for('static/css', filename='bootstrap.min.css') }}" rel="stylesheet">#}
+    {#    <link href="{{ url_for('static/css', filename='bootstrap.min.css') }}" rel="stylesheet">#}
     <style type="text/css">
         * {
             font-family: "Do Hyeon", sans-serif;
@@ -62,7 +62,9 @@
         $(document).ready(function () {
             $("#reviews-box").html("");
             showCommentsList();
+            showCommunicate();
         })
+
         {#<!-- 댓글 적은 데이터 서버로 보내기 -->#}
 
         function makeCommunicateRe() {
@@ -97,7 +99,7 @@
             //1. 리스트 서버에 요청하기
             $.ajax({
                 type: 'GET',
-                url: '/comment/{{ communicate_id }}',
+                url: '/comment/{{ code }}',
                 data: {},
                 success: function (response) {
                     //2. 요청 성공 여부 확인
@@ -122,6 +124,41 @@
                 $("#reviews-box").append(tempHtml);
             }
         }
+
+        {#댓글 창에 원래 게시글 가져오기#}
+
+        function showCommunicate() {
+            $.ajax({
+                type: 'GET',
+                url: '/review_page/{{ code}}/{{ communicate_id }}/element',
+                data: {
+
+                },
+                success: function (response) {
+                    if (response["result"] == "success") {
+                        let comments = response["items"];
+                        for (let i = 0; i < comments.length; i++) {
+                            console.log(response)
+                            makeElement(comments[i]['title'], comments[i]['content'], comments[i]['timestamp']);
+                        }
+
+                    }else{
+                        alert("목록을 받아오지 못했습니다.")
+                    }
+                }
+            })
+
+            function makeElement(title, content, timestamp) {
+                let tempHtml = `
+                <tr>
+                    <td>${title}</td>
+                    <td>${content}</td>
+                    <td>${timestamp}</td>
+                </tr>`;
+                $("#element").append(tempHtml);
+            }
+        }
+
 
     </script>
 </head>
@@ -150,7 +187,7 @@
 </div>
 
 <table class="table">
-    <thead style="padding-left: 100px">
+    <thead id="element" style="padding-left: 100px">
     <tr>
         <th scope="row">title</th>
         <th scope="row">content</th>
@@ -158,10 +195,10 @@
     </tr>
     </thead>
 
-    <tr>
-        <td class="clickedTitle">clickedTitle</td>
-        <td class="clickedContent">clickedContent</td>
-        <td class="clickedDate">clickedDate</td>
+    <tr >
+        <td id="clickedTitle"></td>
+        <td id="clickedContent"></td>
+        <td id="clickedDate"></td>
 
     </tr>
 </table>
@@ -177,11 +214,7 @@
 
         <div>
             <ul id="reviews-box" class="mylist">
-                <li>목록 아이템 1</li>
-                <li>목록 아이템 2</li>
-                <li>목록 아이템 3</li>
-                <li>목록 아이템 4</li>
-                <li>목록 아이템 5</li>
+
             </ul>
         </div>
     </div>

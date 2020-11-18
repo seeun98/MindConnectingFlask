@@ -3,15 +3,17 @@
 <head>
     <meta charset="utf-8">
     <title>MindConnecting JoinUs</title>
-    <link href="/static/css/joinus.css" rel="stylesheet">
+
     <script>
         function joinus() {
             //1. 정보를 가져온다.
             let id = $("#id").val();
             let pw = $("#password").val();
+            let name = $("#Name").val();
             let email = $("#email").val();
             let is_student = $("#is_student").val();
             let department = $("#department").val();
+            console.log(id, pw, name, email, is_student, department)
 
             //2.하나라고 입력하지 않았을 때 alert
             if (id == "") {
@@ -22,7 +24,11 @@
                 alert("비밀번호를 입력하세요")
                 $("#password").focus();
                 return;
-            } else if (is_student == "") {
+            } else if (name == "") {
+                alert("이름을 입력하세요")
+                $("#name").focus();
+                return;
+            }else if (is_student == "") {
                 alert("STUDNET/PROFESSOR 여부를 선택하세요")
                 $("#is_student").focus();
                 return;
@@ -40,7 +46,7 @@
             $.ajax({
                 type: "POST",
                 url: "/joinus",
-                data: {id: id, password: pw, department: department, is_student: is_student, email: email},
+                data: {id: id, password: pw, name: name, department: department,  is_student: is_student, email: email},
                 success: function (response) {
                     if (response["result"] == "success") {
                         alert(response["msg"]);
@@ -195,18 +201,96 @@
 
 
 
-        <div class="login-form-left-side">
-            <form>
-                <div class="form-group">
-                    <label for="InputId">ID(학번)</label>
-                    <input class="form-control" id="ID" placeholder="아이디(학번)을 입력하세요">
-
+      <div class="page-wrapper bg-blue p-t-100 p-b-100 font-robo">
+        <div class="wrapper wrapper--w680">
+        <div class="card card-1">
+            <div class="card-heading">
+                <img href="static/images/school.jpg">
+            </div>
+            <div class="card-body">
+                <div >
+                    <h2 class="title" style="text-align:center; text-decoration-color: darkblue">Join Us</h2>
                 </div>
+                <form method="POST" style="padding-left : 50px; padding-bottom: 50px">
+                    <div class="input-group">
+                        <label>ID</label>
+                        <input class="input--style-1" type="text" placeholder="ID" name="id">
+
+                    </div>
+
+                    <div class="row row-space">
+                        <div class="input-group">
+                            <label>PASSWORD</label>
+                            <input class="input--style-1 js-datepicker" type="text" placeholder="PASSWORD"
+                                   name="password">
+                            <i class="zmdi zmdi-calendar-note input-icon js-btn-calendar">
+
+                            </i>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>NAME</label>
+                        <input class="input--style-1" type="text" placeholder="Name" name="name">
+
+                    </div>
 
 
+                    <div class="col-2">
+                        <div class="input-group">
+                            <div class="rs-select2 js-select-simple select--no-search">
+                                <label style="padding-bottom : 20px">PROFESSOR/STUDENT</label>
+                                <select  name="is_student" tabindex="-1" class="select2-hidden-accessible"
+                                        aria-hidden="true">
+                                    <option disabled="disabled" selected="selected">professor/student</option>
+                                    <option>Professor</option>
+                                    <option>Student</option>
+                                    <option>Other</option>
+                                </select><!--<span class="select2 select2-container select2-container--default" dir="ltr"
+                                               style="width: 81.2px;"><span class="selection"><span
+                                    class="select2-selection select2-selection--single" role="combobox"
+                                    aria-haspopup="true" aria-expanded="false" tabindex="0"
+                                    aria-labelledby="select2-gender-rb-container"><span
+                                    class="select2-selection__rendered" id="select2-gender-rb-container" title="GENDER"></span><span
+                                    class="select2-selection__arrow" role="presentation"><b
+                                    role="presentation"></b></span></span></span><span class="dropdown-wrapper"
+                                                                                       aria-hidden="true"></span></span>
+                                <div class="select-dropdown"></div>-->
+                            </div>
+                        </div>
+                    </div>
 
-            </form>
+                    <div class="row row-space">
+                        <div class="input-group">
+                            <label>EMAIL</label>
+                            <input class="input--style-1 js-datepicker" type="text" placeholder="EMAIL" name="email">
+                            <i class="zmdi zmdi-calendar-note input-icon js-btn-calendar">
+
+                            </i>
+                        </div>
+                    </div>
+
+                    <div class="row row-space">
+                        <div class="input-group">
+                            <label>DEPARTMENT</label>
+                            <input class="input--style-1 js-datepicker" type="text" placeholder="DEPARTMENT"
+                                   name="department">
+                            <i class="zmdi zmdi-calendar-note input-icon js-btn-calendar">
+
+                            </i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button class="btn btn-primary" type="submit" onclick="joinus()" >JOIN US</button>
+                    </div>
+                </form>
+
+            </div>
         </div>
+    </div>
+</div>
+
 
 
 

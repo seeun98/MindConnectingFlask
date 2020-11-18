@@ -109,7 +109,8 @@
 
                     //3.요청 성공했을 때 리뷰를 올바르게 화면에 나타내기
                     for (let i = 0; i < contents.length; i++) {
-                        makeCard(contents[i]["id"], contents[i]["title"], contents[i]["content"], contents[i]['timestamp']);
+                        console.log(contents[i])
+                        makeCard(contents[i]["communicate_id"], contents[i]["title"], contents[i]["content"], contents[i]['timestamp']);
                     }
                 } else {
                     alert("목록을 받아오지 못했습니다. ")
@@ -125,6 +126,7 @@
                     <td>${content}</td>
                     <td>${timestamp}</td>
                     <td><button class="primary" onclick="goToCommentPage('${id}')">댓글 보러가기</button></td>
+{#                    <td><a class="btn btn-success">('${professorStatus}')</a>#}
                     </tr>`;
         $("#reviews-box").append(tempHtml);
     }

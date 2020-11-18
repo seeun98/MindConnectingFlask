@@ -5,23 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MindConnecting Login</title>
     <link href="static/css/loginstyle.css" rel="stylesheet" media="all">
-
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+            integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
 
     <script src="https://kit.fontawesome.com/51db22a717.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Alata&display=swap" rel="stylesheet">
     <script>
-        function login(){
+
+        function login() {
             // 화면에서 입력한 아이디, 패스워드 가져오기
+            {#alert("clicked login()")#}
             let id = $("#id").val();
             let password = $("#password").val();
+            console.log(id, password)
 
             //아이디, 패스워드 중 입력되지 않을 시 alert
-            if(id == ""){
+            if (id == "") {
                 alert("id(학번)를 입력해주세요")
                 $("id").focus();
                 return;
-            }
-            else if(password == ""){
+            } else if (password == "") {
                 alert("password를 입력해주세요")
                 $("password").focus();
                 return;
@@ -30,56 +33,71 @@
             //패스워드와 아이디를 서버에 보낸다.
             $.ajax({
                 type: "POST",
-                url: "/login",
-                data: {id : id, password : password},
-                success : function(response) {
-                    if (response["result"] == "success"){
-                    alert(response["msg"]);
-                    window.location.reload();
+                url: "/login_post",
+                data: {id: id, password: password},
+                success: function (response) {
+                    if (response["result"] == "success") {
+                        alert(response["msg"]);
+                        let items = response["item"]
+                        console.log(items)
+                        if (items['is_student'] == 'Student') {
+                            window.location.href ='/professorIndexList'
+                        }
+                        else if (items['is_student'] == 'Professor'){
+                            window.location.href = '/professorOfficeForm'
+                        }
+
+                        {#window.location.href='/professorIndexList'#}
+                        {#window.location.reload();#}
+                    }else if (response["result"] == "fail") {
+                        alert(response["msg"]);
                     }
                 }
             })
 
 
         }
-       function returnJoinus(){
-            //create profile 누르면 joinus 페이지 보여줘라
-       }
+
+        function returnLogin(){
+            window.location.href='/joinus'
+        }
+
+
 
 
     </script>
 </head>
 <body>
-    <div class="page-container">
-        <div class="login-form-container shadow">
-            <div class="login-form-right-side">
-                <div class="top-logo-wrap">
+<div class="page-container">
+    <div class="login-form-container shadow">
+        <div class="login-form-right-side">
+            <div class="top-logo-wrap">
 
-                </div>
-                <h1>MIND CONNECTING</h1>
-                <h4>교수님과 학생의 소통플랫폼</h4>
             </div>
-            <div class="login-form-left-side">
-                <div class="login-top-wrap">
-                    <span>Don't have an account?</span>
-                    <button class="create-account-btn shadow-light" >Create Profile</button>
+            <h1>MIND CONNECTING</h1>
+            <h4>교수님과 학생의 소통플랫폼</h4>
+        </div>
+        <div class="login-form-left-side">
+            <div class="login-top-wrap">
+                <span>Don't have an account?</span>
+                <a class="create-account-btn shadow-light" href="/joinus">Create Profile</a>
+            </div>
+            <div class="login-input-container">
+                <div class="login-input-wrap input-id">
+                    <i class="far fa-envelope"></i>
+                    <input placeholder="ID" type="text" id="id">
                 </div>
-                <div class="login-input-container">
-                    <div class="login-input-wrap input-id">
-                        <i class="far fa-envelope"></i>
-                        <input placeholder="ID" type="text">
-                    </div>
-                    <div class="login-input-wrap input-password">
-                        <i class="fas fa-key"></i>
-                        <input placeholder="Password"  type="password">
-                    </div>
+                <div class="login-input-wrap input-password">
+                    <i class="fas fa-key"></i>
+                    <input placeholder="Password" type="text" id="password">
                 </div>
-                <div class="login-btn-wrap">
-                    <button class="login-btn" onclick="login()">Login</button>
-                    <a href="#" >Forgot password?</a>
-                </div>
+            </div>
+            <div class="login-btn-wrap">
+                <button class="login-btn" onclick="login()">Login</button>
+                <a href="#">Forgot password?</a>
             </div>
         </div>
     </div>
+</div>
 </body>
 </html>
