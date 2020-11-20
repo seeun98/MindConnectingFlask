@@ -204,5 +204,53 @@ def comment_page_get(communicate_id):
 
 
 
+
+
+@app.route("/search_post", methods=['POST'])
+def search_post():
+    select_option = request.form['select_option']
+    what = request.form['what']
+
+    print(select_option)
+    print(what)
+    if select_option == 'sbjNm':
+        searchResult = db.schedule.find_one({'subject': what})
+    elif select_option == 'profNm':
+        searchResult = db.schedule.find_one({'professor': what})
+
+    print(searchResult)
+    if searchResult is None:
+        return jsonify({'result': 'fail', 'msg': '검색 실패'})
+    else:
+        return jsonify({'result': 'success', 'msg': '검색 성공', 'item': searchResult})
+
+@app.route("/select_subject", methods=['GET', 'POST'])
+def select_subject():
+    if request.method == 'GET':
+        timeT = getTimeTable()
+        print("ㅏㅏㅏ")
+        #print(timeT)
+        return render_template('select_subject.html')
+    else:
+        # select = request.form['select']
+        # search = request.form['search']
+        #
+        # select_search = {
+        #     'select': select,
+        #     'search': search
+        # }
+
+        all_subject = list(db.schedule.find({}))
+
+        print("엥...")
+        print(all_subject[0]['subject'])
+        return render_template('select_subject.html') #return 값 수정필요
+
+
+
+
+
+
+
 if __name__ == '__main__':
     app.run("0.0.0.0", port=5000, debug=True)
