@@ -1,84 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>MindConnecting JoinUs</title>
+{% extends "index.html" %}
 
-    <script>
-        function joinus() {
-            //1. 정보를 가져온다.
-            let id = $("#id").val();
-            let pw = $("#password").val();
-            let name = $("#Name").val();
-            let email = $("#email").val();
-            let is_student = $("#is_student").val();
-            let department = $("#department").val();
-            console.log(id, pw, name, email, is_student, department)
+{% block custom_style %}
 
-            //2.하나라고 입력하지 않았을 때 alert
-            if (id == "") {
-                alert("id를 입력하세요");
-                $("#id").focus();
-                return;
-            } else if (pw == "") {
-                alert("비밀번호를 입력하세요")
-                $("#password").focus();
-                return;
-            } else if (name == "") {
-                alert("이름을 입력하세요")
-                $("#name").focus();
-                return;
-            }else if (is_student == "") {
-                alert("STUDNET/PROFESSOR 여부를 선택하세요")
-                $("#is_student").focus();
-                return;
-            } else if (department == "") {
-                alert("학과를 입력하세요")
-                $("#department").focus();
-                return;
-            } else if (email == "") {
-                alert("email를 입력하세요")
-                $("#email").focus();
-                return;
-            }
-
-            //정보를 서버에 넘긴다.
-            $.ajax({
-                type: "POST",
-                url: "/joinus",
-                data: {id: id, password: pw, name: name, department: department,  is_student: is_student, email: email},
-                success: function (response) {
-                    if (response["result"] == "success") {
-                        alert(response["msg"]);
-                        window.location.reload();
-                    }
-                }
-            })
-        }
-    </script>
-    <style>
-        :root {
-
-
-        }
-
-        * {
-            padding: 0;
-            margin: 0;
-            box-sizing: border-box;
-            font-family: 'Alata', sans-serif;
-        }
-
-        .page-container {
-            width: 100vw;
-            height: 100vh;
-            background: #eff0f2;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-        }
-
+<style>
         .shadow {
             -webkit-box-shadow: 27px 43px 43px -26px rgba(89, 89, 89, 0.39);
             -moz-box-shadow: 27px 43px 43px -26px rgba(89, 89, 89, 0.39);
@@ -90,13 +14,10 @@
             -webkit-box-shadow: 45px 45px 104px -33px rgba(38,38,38,0.92);
             -moz-box-shadow: 45px 45px 104px -33px rgba(38,38,38,0.92);
             box-shadow: 45px 45px 104px -33px rgba(38,38,38,0.92);
-
         }*/
         .login-form-container {
 
             background: #f5f5f5;
-            width: 860px;
-            height: 540px;
             display: flex;
             flex-direction: row;
             box-shadow: 10px black;
@@ -185,9 +106,10 @@
         .title {
             text-decoration-color: darkblue;
         }
-    </style>
-</head>
-<body>
+        </style>
+{% endblock %}
+{% block content %}
+
 <div class="page-container">
     <div class="login-form-container shadow">
         <div class="login-form-right-side">
@@ -197,104 +119,66 @@
             <h1>MIND CONNECTING</h1>
             <h2>Register</h2>
         </div>
-
-
-
-
-      <div class="page-wrapper bg-blue p-t-100 p-b-100 font-robo">
-        <div class="wrapper wrapper--w680">
-        <div class="card card-1">
-            <div class="card-heading">
-                <img href="static/images/school.jpg">
-            </div>
-            <div class="card-body">
-                <div >
-                    <h2 class="title" style="text-align:center; text-decoration-color: darkblue">Join Us</h2>
-                </div>
-                <form method="POST" style="padding-left : 50px; padding-bottom: 50px">
-                    <div class="input-group">
-                        <label>ID</label>
-                        <input class="input--style-1" type="text" placeholder="ID" name="id">
-
+        <div class="page-wrapper bg-blue p-t-100 p-b-100 font-robo" style="width:200%;">
+            <div class="wrapper wrapper--w680">
+                <div class="card card-1">
+                    <div class="card-heading">
+                        <img href="static/images/school.jpg">
                     </div>
-
-                    <div class="row row-space">
-                        <div class="input-group">
-                            <label>PASSWORD</label>
-                            <input class="input--style-1 js-datepicker" type="text" placeholder="PASSWORD"
-                                   name="password">
-                            <i class="zmdi zmdi-calendar-note input-icon js-btn-calendar">
-
-                            </i>
+                    <div class="card-body">
+                        <div >
+                            <h2 class="title" style="text-align:center; text-decoration-color: darkblue">Join Us</h2>
                         </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label>NAME</label>
-                        <input class="input--style-1" type="text" placeholder="Name" name="name">
-
-                    </div>
-
-
-                    <div class="col-2">
-                        <div class="input-group">
-                            <div class="rs-select2 js-select-simple select--no-search">
-                                <label style="padding-bottom : 20px">PROFESSOR/STUDENT</label>
-                                <select  name="is_student" tabindex="-1" class="select2-hidden-accessible"
-                                        aria-hidden="true">
-                                    <option disabled="disabled" selected="selected">professor/student</option>
-                                    <option>Professor</option>
-                                    <option>Student</option>
-                                    <option>Other</option>
-                                </select><!--<span class="select2 select2-container select2-container--default" dir="ltr"
-                                               style="width: 81.2px;"><span class="selection"><span
-                                    class="select2-selection select2-selection--single" role="combobox"
-                                    aria-haspopup="true" aria-expanded="false" tabindex="0"
-                                    aria-labelledby="select2-gender-rb-container"><span
-                                    class="select2-selection__rendered" id="select2-gender-rb-container" title="GENDER"></span><span
-                                    class="select2-selection__arrow" role="presentation"><b
-                                    role="presentation"></b></span></span></span><span class="dropdown-wrapper"
-                                                                                       aria-hidden="true"></span></span>
-                                <div class="select-dropdown"></div>-->
+                         <form method="post" class="post-form">
+                            {{ form.csrf_token }}
+                            {% include "form_errors.html" %}
+                            <div class="form-group">
+                                <label for="userid">아이디</label>
+                                <input type="text" class="form-control" name="userid" id="userid"
+                                       value="{{ form.userid.data or '' }}">
                             </div>
-                        </div>
+                            <div class="form-group">
+                                <label for="password1">비밀번호</label>
+                                <input type="password" class="form-control" name="password1" id="password1"
+                                       value="{{ form.password1.data or '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="password2">비밀번호 확인</label>
+                                <input type="password" class="form-control" name="password2" id="password2"
+                                       value="{{ form.password2.data or '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="name">이름</label>
+                                <input type="text" class="form-control" name="name" id="name"
+                                       value="{{ form.name.data or '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">이메일</label>
+                                <input type="text" class="form-control" name="email" id="email"
+                                       value="{{ form.email.data or '' }}">
+                            </div>
+                             <div class="form-group">
+                                <label for="is_student">학생/교수</label>
+                                 <select  name="is_student" tabindex="-1" class="select2-hidden-accessible"
+                                                aria-hidden="true" id="is_student">
+                                            <option value ="Professor" >Professor</option>
+                                            <option value ="Student">Student</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                            </div>
+                             <div class="form-group">
+                                <label for="department">학과</label>
+                                <input type="text" class="form-control" name="department" id="department"
+                                       value="{{ form.department.data or '' }}">
+                            </div>
+                            <button type="submit" class="btn btn-primary">생성하기</button>
+                        </form>
+
+
                     </div>
-
-                    <div class="row row-space">
-                        <div class="input-group">
-                            <label>EMAIL</label>
-                            <input class="input--style-1 js-datepicker" type="text" placeholder="EMAIL" name="email">
-                            <i class="zmdi zmdi-calendar-note input-icon js-btn-calendar">
-
-                            </i>
-                        </div>
-                    </div>
-
-                    <div class="row row-space">
-                        <div class="input-group">
-                            <label>DEPARTMENT</label>
-                            <input class="input--style-1 js-datepicker" type="text" placeholder="DEPARTMENT"
-                                   name="department">
-                            <i class="zmdi zmdi-calendar-note input-icon js-btn-calendar">
-
-                            </i>
-                        </div>
-                    </div>
-
-                    <div>
-                        <button class="btn btn-primary" type="submit" onclick="joinus()" >JOIN US</button>
-                    </div>
-                </form>
-
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-
-
-
-    </div>
-</div>
-</body>
-</html>
+{% endblock %}

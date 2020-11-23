@@ -1,138 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+{% extends "index.html" %}
+{% block custom_style %}
+{% endblock %}
 
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"
-            integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <!-- 구글 폰트 -->
-    <link href="https://fonts.googleapis.com/css?family=Do+Hyeon&amp;display=swap" rel="stylesheet">
-    {#    <link href="static/css/main.css" rel="stylesheet" media="all">#}
-    <style type="text/css">
-        * {
-            font-family: "Do Hyeon", sans-serif;
-        }
+{% block content %}
 
-        h1,
-        h5 {
-            display: inline;
-        }
-
-        .info {
-            padding-left: 100px;
-            padding-right: 100px;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-
-        .review {
-            text-align: center;
-        }
-
-        .title-container {
-            text-align: center;
-            padding-top: 50px;
-        }
-
-        .reviews {
-            margin-top: 100px;
-            padding-left: 50px;
-            padding-right: 50px;
-            padding-bottom: 50px;
-
-        }
-    </style>
-    <script>
-        //저장된 정보 서버로 넘기기
-        function postProfessorOfficeInfo() {
-            let name = $("#name").val();
-            let status1 = $("#status1").is(":checked");
-            let status2 = $("#status2").is(":checked");
-            let status3 = $("#status3").is(":checked");
-            let status4 = $("#status4").is(":checked");
-            console.log(status1, status2, status3, status4)
-
-            $.ajax({
-                type: "POST",
-                url: "/professorStatus",
-                data: {
-                    "name" : name,
-                    "status1":status1,
-                    "status2":status2,
-                    "status3":status3,
-                    "status4":status4,
-                },
-                success: function (response) {
-                    if (response["result"] == "success") {
-                        alert(response["msg"]);
-                        window.location.href = '/professorIndexList'
-
-                    } else if (response["result"] == "fail") {
-                        alert(response["msg"]);
-                    }
-                }
-            })
-        }
-
-    </script>
-</head>
-<body>
-<nav class="navbar navbar-expand-sm bg-primary">
-    <div class="card-body">
-        <a class="nav-link" href="communicate.html" style="font-size: 18px; color: white; width:200px; height: 30px">MIND
-            CONNECTING</a>
+<form style="margin : 100px" method="post" >
+    {{ form.csrf_token }}
+    {% include "form_errors.html" %}
+    <div class="form-group">
+        <label for="name">교수님 성함</label>
+        <input type="text" class="form-control" name="name" id="name" aria-describedby="emailHelp"
+               placeholder="예) 이세은" value="{{form.name.data or ''}}">
+        <small class="form-text text-muted">교수님 성함을 입력해주세요.</small>
     </div>
-
-    <!--    <nav class="navbar navbar-expand-sm bg-blue">-->
-    <ul class="navbar-nav">
-        <li class="nav-item">
-            <a class="nav-link" href="../login" style="color: white">Login</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="../joinus" style="color: white">register</a>
-        </li>
-    </ul>
-</nav>
-
-<form style="margin : 100px">
-        <div class="form-group">
-            <label for="exampleInputEmail1">교수님 성함</label>
-            <input type="input" class="form-control" id="name" aria-describedby="emailHelp"
-                   placeholder="예) 이세은">
-            <small id="emailHelp" class="form-text text-muted">교수님 성함을 입력해주세요.</small>
-        </div>
-    {#    <div class="form-group">#}
-    {#        <label for="exampleInputEmail1">상담 가능 시간 표기</label>#}
-    {#        <input type="input" class="form-control" id="exampleInputTime"#}
-    {#               placeholder="예) 금일 상담 OO시~OO시까지 가능">#}
-    {#        <small id="emailHelp" class="form-text text-muted">교수님의 상담 가능한 시간이 학생들에게 보여집니다.</small>#}
-    {#    </div>#}
-    {#    #}
-    <div class="card-body">
-    <div class="form-check">
-        <input type="checkbox" class="form-check-input" id="status1">
-        <label class="form-check-label" for="exampleCheck1">재실</label>
+    <div class="form-group">
+        <label for="status">재실 여부</label>
+         <select  name="status" tabindex="-1" class="select2-hidden-accessible"
+                        aria-hidden="true" id="status">
+             <option value="재실">재실</option>
+             <option value="퇴근">퇴근</option>
+             <option value="연구중">연구중</option>
+             <option value="휴식중">휴식중</option>
+         </select>
     </div>
-    <div class="form-check">
-        <input type="checkbox" class="form-check-input" id="status2">
-        <label class="form-check-label" for="exampleCheck1">퇴근</label>
-    </div>
-    <div class="form-check">
-        <input type="checkbox" class="form-check-input" id="status3">
-        <label class="form-check-label" for="exampleCheck1">연구중</label>
-    </div>
-    <div class="form-check">
-        <input type="checkbox" class="form-check-input" id="status4">
-        <label class="form-check-label" for="exampleCheck1">휴식중</label>
-    </div>
-    <button type="button" class="btn btn-primary" onclick="postProfessorOfficeInfo()">등록</button>
-    </div>
+    <button type="submit" class="btn btn-primary">등록</button>
 </form>
 
-
-</body>
-</html>
+{% endblock %}

@@ -1,209 +1,210 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, url_for, flash, session, g
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import redirect
+
 from pymongo import MongoClient
+
 from datetime import datetime
-import flask_admin
-import uuid
-from flask_admin.contrib.pymongo import ModelView
+from forms import UserCreateForm, UserLoginForm, ProfessorOfficeForm, CommunicateForm
+
+import config
 
 client = MongoClient('localhost', 27017)
 db = client.mindConnecting
 
 app = Flask(__name__)
-#set optional bootwatch theme
+app.config.from_object(config)
+
 
 @app.route("/")
 def home():
-    return render_template('index.html')
+    return redirect(url_for('schedule_index'))
 
-# @app.route("/professorIndex", methods=['GET'])
-# def professorHome():
-#     return render_template("professorIndex.html")
 
-@app.route("/professorOfficeForm", methods=['GET'])
-def professorOfficeForm():
-    return render_template("professorOfficeForm.html")
+@app.route("/professor/addStatus", methods=['GET', 'POST'])
+def professor_office_form():
+    form = ProfessorOfficeForm()
+    if request.method == 'POST':
+        professor = db.member.find_one({'name': form.name.data, 'is_student': 'Professor'})
+        if professor:
+            info = {
+                'name': form.name.data,
+                'status': form.status.data
+            }
+            db.professorStatus.delete_many({'name': info['name']})
+            db.professorStatus.insert_one(info)
+            return redirect(url_for('home'))
+        else:
+            flash("이름이 교수님 데이터베이스에 없습니다.")
 
-@app.route("/professorStatus", methods=['POST'])
-def professorStatus():
-    name = request.form['name']
-    status1 = request.form['status1']
-    status2 = request.form['status2']
-    status3 = request.form['status3']
-    status4 = request.form['status4']
+    return render_template("professorOfficeForm.html", form=form)
 
-    professorStatusInfo = {
-        'name' : name,
-        'status1' : status1,
-        'status2' : status2,
-        'status3' : status3,
-        'status4' : status4
 
+@app.route("/schedule", methods=['GET'])
+def schedule_index():
+    schedule_list = list(db.schedule.find({},
+                                          {'_id': 0,
+                                           'subject': 1,
+                                           'professor': 1,
+                                           'time_location': 1,
+                                           'code': 1}))
+    professor_status_list = list(db.professorStatus.find({}, {'_id': 0}))
+    professor_status_dict = {item.get('name'): item.get('status')
+                             for item in professor_status_list}
+
+    color_dict = {
+        '재실': 'success',  # 초록
+        '퇴근': 'danger',  # 빨강
+        '연구중': 'warning',  # 노랑
+        '휴식중': 'secondary',  # 회색
     }
-    db.professorStatus.insert_one(professorStatusInfo)
-    return jsonify({'result':'success','msg':'교수님 상태 입력 성공'})
 
-@app.route("/login", methods=['GET'])
+    print(professor_status_dict)
+    for sc in schedule_list:
+        sc['status'] = professor_status_dict.get(sc['professor'], None)
+        sc['color'] = color_dict.get(sc['status'], '')
+    # 재실 데이터가져오기
+    # 재실 데이터 vs 스케쥴 리스트 데이터비
+    # 비교 후, 해당하는 교수님 데이터에 새로운 key 값 추가하기
+    print(schedule_list)
+    return render_template("professorIndex.html", schedule_list=schedule_list)
+
+
+# -----------------------------------------------------------------------------------------------------------------
+# auth 인증
+
+
+@app.route("/login", methods=['GET', 'POST'])
 def login():
-    if request.method == 'GET':
-        return render_template('login.html')
+    form = UserLoginForm()
 
+    if request.method == 'POST':
+        error = None
+        user = db.member.find_one({'id': form.userid.data})
+        print(user)
+        if not user:
+            error = "존재하지 않는 사용자입니다."
+        elif not check_password_hash(user['password'], form.password.data):
+            error = "비밀번호가 올바르지 않습니다."
+        if error is None:
+            session.clear()
+            session['user_id'] = user['id']
+            return redirect(url_for('home'))
+        flash(error)
 
-
-@app.route("/login_post", methods=['POST'])
-def login_post():
-    ids = request.form['id']
-    pws = request.form['password']
-
-    loginInfo = db.member.find_one({'id': ids, 'password' : pws}, {'is_student' : 1, '_id':0})
-    print(loginInfo)
-    if loginInfo is None:
-        return jsonify({'result':'fail','msg':'로그인 실패'})
-    else:
-        return jsonify({'result':'success','msg':'로그인 성공','item':loginInfo})
+    return render_template('login.html', form=form)
 
 
 @app.route("/joinus", methods=['GET', 'POST'])
 def joinus():
-    if request.method == 'GET':
-        return render_template('joinus.html')
+    form = UserCreateForm()
+    if request.method == 'POST':
+        user = db.member.find_one({'id': form.userid.data})
+        if not user:
+            user = {
+                'id': form.userid.data,
+                'password': generate_password_hash(form.password1.data),
+                'name': form.name.data,
+                'email': form.email.data,
+                'is_student': form.is_student.data,
+                'department': form.department.data
+            }
+            print(user)
+            db.member.insert_one(user)
+            return redirect(url_for('login'))
+        else:
+            flash('이미 존재하는 사용자입니다.')
+
+    return render_template('joinus.html', form=form)
+
+
+@app.before_request
+def load_logged_in_user():
+    user_id = session.get('user_id')
+    if user_id is None:
+        g.user = None
     else:
-        id = request.form['id']
-        pw = request.form['password']
-        name = request.form['name']
-        email = request.form['email']
-        is_student = request.form['is_student']
-        department = request.form['department']
-
-        information = {
-            'id' : id,
-            'password' : pw,
-            'name' : name,
-            'email' : email,
-            'is_student' : is_student,
-            'department' : department
-        }
-        print(information)
-        db.member.insert_one(information)
-        return render_template('login.html')
+        g.user = db.member.find_one({'id': user_id})['name']
 
 
-
-@app.route("/professorIndexList", methods=['GET'])
-def index_get():
-    return render_template("professorIndex.html")
-
-@app.route("/professorIndex", methods=['GET'])
-def schedule_list():
-    schedules_list = [x for x in list(db.schedule.find({},{'_id':0, 'subject':1, 'professor':1, 'time_location':1, 'code':1}))]
-    # print(schedules_list)
-    professor_status_list = [x for x in list(db.professorStatus.find({},{'_id':0}))]
-    for psl in professor_status_list:
-        # psl은 교수님 재실 상태 데이터
-        for sc in schedules_list:
-            if psl.get('name') == sc.get('professor'):
-                sc['status1'] = psl.get('status1')
-                sc['status2'] = psl.get('status2')
-                sc['status3'] = psl.get('status3')
-                sc['status4'] = psl.get('status4')
-
-    # 재실 데이터가져오기
-    # 재실 데이터 vs 스케쥴 리스트 데이터비
-    # 비교 후, 해당하는 교수님 데이터에 새로운 key값 추가하기
-    return jsonify({'result': 'success', 'items': schedules_list})
-
-@app.route("/index", methods=['POST'])
-def indexPost():
-    return render_template("index.html")
+@app.route('/logout/')
+def logout():
+    session.clear()
+    return redirect(url_for('home'))
 
 
-#-----------------------------------------------------------------------------------------------------------------
-#게시판 창구
+# -----------------------------------------------------------------------------------------------------------------
+# 게시판 창구
 
-@app.route("/communicate/<code>", methods=['GET'])
+
+@app.route("/communicate/<code>", methods=['GET', 'POST'])
 def communicate_page(code):
-    return render_template('communicate.html', code=code)
+    form = CommunicateForm()
+    if request.method == 'POST':
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-@app.route("/communicate/<code>/list", methods=['GET'])
-def communicate_list_get(code):
+        info = {
+            'code': code,
+            'title': form.title.data,
+            'content': form.content.data,
+            'timestamp': timestamp
+        }
+
+        db.communicate.insert_one(info)
+
     communicate_list = list(db.communicate.find({'code': code}, {'_id': 0}))
-
-    return jsonify({'result': 'success', 'items': communicate_list})
-
-
-@app.route("/communicate", methods=['POST'])
-def communicate_post():
-    id = uuid.uuid4().hex
-    code = request.form['code']
-    title = request.form['title']
-    content = request.form['content']
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-    communicateInfo = {
-        'id': id,
-        'code': code,
-        'title' : title,
-        'content' : content,
-        'timestamp': timestamp
-    }
-
-    db.communicate.insert_one(communicateInfo)
-    return jsonify({'result': 'success'})
-
-
+    return render_template('communicate.html', communicate_list=communicate_list, form=form)
 
 
 @app.route("/review_page/<code>/<communicate_id>", methods=['GET'])
 def review_page(code, communicate_id):
-    return render_template("communicateRE.html", code = code, communicate_id = communicate_id)
+    return render_template("communicateRE.html", code=code, communicate_id=communicate_id)
+
 
 # 댓글 구성요소
 # id, communicate_id, content
 # 댓글 한 요소 들고 오기
-
 @app.route("/review_page/<code>/<communicate_id>/element", methods=['GET'])
 def element(code, communicate_id):
-    element_list = list(db.communicate.find({'code': code, 'communicate_id' : communicate_id},{'_id':0}))
+    element_list = list(db.communicate.find({'code': code, 'communicate_id': communicate_id}, {'_id': 0}))
     print(element_list)
-    return jsonify({'result' : 'success', 'items' : element_list})
+    return jsonify({'result': 'success', 'items': element_list})
 
-#댓글 불러오기
+
+# 댓글 불러오기
 @app.route("/review_page/<code>/<communicate_id>/comments", methods=['GET'])
 def review_page_comments_list(communicate_id, comment_id, content):
-    comment_list = list(db.comment.find({'communicate_id' : communicate_id, 'comment_id' : comment_id, 'content' : content}))
-    return jsonify({'result': 'success', 'items': comments_list })
+    comments_list = list(
+        db.comment.find({'communicate_id': communicate_id, 'comment_id': comment_id, 'content': content}))
+    return jsonify({'result': 'success', 'items': comments_list})
 
-#댓글 등록 누를때 댓글 데이터베이스에 저장하기
+
+# 댓글 등록 누를때 댓글 데이터베이스에 저장하기
 @app.route("/comment", methods=['POST'])
 def comment_page_post():
-    comment_id = uuid.uuid4().hex
     code = request.form['code']
     communicate_id = request.form['communicate_id']
     content = request.form['content']
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    communicateCommentInfo ={
-        'comment_id' : comment_id,
-        'communicate_id' : communicate_id,
-        'code' : code,
-        'content' : content,
-        'timestamp' : timestamp
+    info = {
+        'communicate_id': communicate_id,
+        'code': code,
+        'content': content,
+        'timestamp': timestamp
     }
 
-    db.communicateComment.insert_one(communicateCommentInfo)
+    db.communicateComment.insert_one(info)
     return jsonify({'result': 'success'})
 
-#댓글 등록 누를때 댓글 데이터베이스에 저장하기
+
+# 댓글 등록 누를때 댓글 데이터베이스에 저장하기
 @app.route("/comment/<communicate_id>", methods=['GET'])
 def comment_page_get(communicate_id):
     # print(communicate_id)
-    found_comments = list(db.communicateComment.find({'code': communicate_id},{'_id':0}))
+    found_comments = list(db.communicateComment.find({'code': communicate_id}, {'_id': 0}))
     # print(found_comments)
     return jsonify({'result': 'success', 'items': found_comments})
-
-
-
-
-
 
 
 @app.route("/search_post", methods=['POST'])
@@ -213,23 +214,25 @@ def search_post():
 
     print(select_option)
     print(what)
+    result = None
     if select_option == 'sbjNm':
-        searchResult = db.schedule.find_one({'subject': what})
+        result = db.schedule.find_one({'subject': what})
     elif select_option == 'profNm':
-        searchResult = db.schedule.find_one({'professor': what})
+        result = db.schedule.find_one({'professor': what})
 
-    print(searchResult)
-    if searchResult is None:
+    print(result)
+    if result is None:
         return jsonify({'result': 'fail', 'msg': '검색 실패'})
     else:
-        return jsonify({'result': 'success', 'msg': '검색 성공', 'item': searchResult})
+        return jsonify({'result': 'success', 'msg': '검색 성공', 'item': result})
+
 
 @app.route("/select_subject", methods=['GET', 'POST'])
 def select_subject():
     if request.method == 'GET':
-        timeT = getTimeTable()
+        # timeT = getTimeTable()
         print("ㅏㅏㅏ")
-        #print(timeT)
+        # print(timeT)
         return render_template('select_subject.html')
     else:
         # select = request.form['select']
@@ -244,12 +247,7 @@ def select_subject():
 
         print("엥...")
         print(all_subject[0]['subject'])
-        return render_template('select_subject.html') #return 값 수정필요
-
-
-
-
-
+        return render_template('select_subject.html')  # return 값 수정필요
 
 
 if __name__ == '__main__':
