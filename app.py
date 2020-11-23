@@ -1,13 +1,13 @@
-from flask import Flask, render_template, request, jsonify, url_for,flash, session, g
+from flask import Flask, render_template, request, jsonify, url_for, flash, session, g
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
+
 from pymongo import MongoClient
+
 from datetime import datetime
 from forms import UserCreateForm, UserLoginForm, ProfessorOfficeForm, CommunicateForm
-import uuid
 
 import config
-
 
 client = MongoClient('localhost', 27017)
 db = client.mindConnecting
@@ -31,7 +31,7 @@ def professor_office_form():
                 'name': form.name.data,
                 'status': form.status.data
             }
-            db.professorStatus.delete_many({'name':info['name']})
+            db.professorStatus.delete_many({'name': info['name']})
             db.professorStatus.insert_one(info)
             return redirect(url_for('home'))
         else:
@@ -43,20 +43,20 @@ def professor_office_form():
 @app.route("/schedule", methods=['GET'])
 def schedule_index():
     schedule_list = list(db.schedule.find({},
-                                           {'_id': 0,
-                                            'subject': 1,
-                                            'professor': 1,
-                                            'time_location': 1,
-                                            'code': 1}))
+                                          {'_id': 0,
+                                           'subject': 1,
+                                           'professor': 1,
+                                           'time_location': 1,
+                                           'code': 1}))
     professor_status_list = list(db.professorStatus.find({}, {'_id': 0}))
     professor_status_dict = {item.get('name'): item.get('status')
-                              for item in professor_status_list}
+                             for item in professor_status_list}
 
     color_dict = {
-        '재실': 'success',# 초록
-        '퇴근': 'danger',# 빨강
-        '연구중': 'warning',# 노랑
-        '휴식중': 'secondary',# 회색
+        '재실': 'success',  # 초록
+        '퇴근': 'danger',  # 빨강
+        '연구중': 'warning',  # 노랑
+        '휴식중': 'secondary',  # 회색
     }
 
     print(professor_status_dict)
@@ -65,9 +65,10 @@ def schedule_index():
         sc['color'] = color_dict.get(sc['status'], '')
     # 재실 데이터가져오기
     # 재실 데이터 vs 스케쥴 리스트 데이터비
-    # 비교 후, 해당하는 교수님 데이터에 새로운 key값 추가하기
+    # 비교 후, 해당하는 교수님 데이터에 새로운 key 값 추가하기
     print(schedule_list)
     return render_template("professorIndex.html", schedule_list=schedule_list)
+
 
 # -----------------------------------------------------------------------------------------------------------------
 # auth 인증
@@ -131,8 +132,9 @@ def logout():
     session.clear()
     return redirect(url_for('home'))
 
-#-----------------------------------------------------------------------------------------------------------------
-#게시판 창구
+
+# -----------------------------------------------------------------------------------------------------------------
+# 게시판 창구
 
 
 @app.route("/communicate/<code>", methods=['GET', 'POST'])
@@ -156,7 +158,7 @@ def communicate_page(code):
 
 @app.route("/review_page/<code>/<communicate_id>", methods=['GET'])
 def review_page(code, communicate_id):
-    return render_template("communicateRE.html", code = code, communicate_id = communicate_id)
+    return render_template("communicateRE.html", code=code, communicate_id=communicate_id)
 
 
 # 댓글 구성요소
@@ -164,36 +166,35 @@ def review_page(code, communicate_id):
 # 댓글 한 요소 들고 오기
 @app.route("/review_page/<code>/<communicate_id>/element", methods=['GET'])
 def element(code, communicate_id):
-    element_list = list(db.communicate.find({'code': code, 'communicate_id' : communicate_id},{'_id':0}))
+    element_list = list(db.communicate.find({'code': code, 'communicate_id': communicate_id}, {'_id': 0}))
     print(element_list)
-    return jsonify({'result' : 'success', 'items' : element_list})
+    return jsonify({'result': 'success', 'items': element_list})
 
 
 # 댓글 불러오기
 @app.route("/review_page/<code>/<communicate_id>/comments", methods=['GET'])
 def review_page_comments_list(communicate_id, comment_id, content):
-    comments_list = list(db.comment.find({'communicate_id' : communicate_id, 'comment_id' : comment_id, 'content' : content}))
-    return jsonify({'result': 'success', 'items': comments_list })
+    comments_list = list(
+        db.comment.find({'communicate_id': communicate_id, 'comment_id': comment_id, 'content': content}))
+    return jsonify({'result': 'success', 'items': comments_list})
 
 
 # 댓글 등록 누를때 댓글 데이터베이스에 저장하기
 @app.route("/comment", methods=['POST'])
 def comment_page_post():
-    comment_id = uuid.uuid4().hex
     code = request.form['code']
     communicate_id = request.form['communicate_id']
     content = request.form['content']
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    communicateCommentInfo ={
-        'comment_id' : comment_id,
-        'communicate_id' : communicate_id,
-        'code' : code,
-        'content' : content,
-        'timestamp' : timestamp
+    info = {
+        'communicate_id': communicate_id,
+        'code': code,
+        'content': content,
+        'timestamp': timestamp
     }
 
-    db.communicateComment.insert_one(communicateCommentInfo)
+    db.communicateComment.insert_one(info)
     return jsonify({'result': 'success'})
 
 
@@ -201,7 +202,7 @@ def comment_page_post():
 @app.route("/comment/<communicate_id>", methods=['GET'])
 def comment_page_get(communicate_id):
     # print(communicate_id)
-    found_comments = list(db.communicateComment.find({'code': communicate_id},{'_id':0}))
+    found_comments = list(db.communicateComment.find({'code': communicate_id}, {'_id': 0}))
     # print(found_comments)
     return jsonify({'result': 'success', 'items': found_comments})
 
@@ -213,24 +214,25 @@ def search_post():
 
     print(select_option)
     print(what)
+    result = None
     if select_option == 'sbjNm':
-        searchResult = db.schedule.find_one({'subject': what})
+        result = db.schedule.find_one({'subject': what})
     elif select_option == 'profNm':
-        searchResult = db.schedule.find_one({'professor': what})
+        result = db.schedule.find_one({'professor': what})
 
-    print(searchResult)
-    if searchResult is None:
+    print(result)
+    if result is None:
         return jsonify({'result': 'fail', 'msg': '검색 실패'})
     else:
-        return jsonify({'result': 'success', 'msg': '검색 성공', 'item': searchResult})
+        return jsonify({'result': 'success', 'msg': '검색 성공', 'item': result})
 
 
 @app.route("/select_subject", methods=['GET', 'POST'])
 def select_subject():
     if request.method == 'GET':
-        timeT = getTimeTable()
+        # timeT = getTimeTable()
         print("ㅏㅏㅏ")
-        #print(timeT)
+        # print(timeT)
         return render_template('select_subject.html')
     else:
         # select = request.form['select']
@@ -245,7 +247,7 @@ def select_subject():
 
         print("엥...")
         print(all_subject[0]['subject'])
-        return render_template('select_subject.html') #return 값 수정필요
+        return render_template('select_subject.html')  # return 값 수정필요
 
 
 if __name__ == '__main__':
