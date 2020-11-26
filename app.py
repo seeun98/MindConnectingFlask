@@ -224,31 +224,17 @@ def search_post():
     else:
         return jsonify({'result': 'success', 'msg': '검색 성공', 'item': searchResult})
 
-@app.route("/select_subject", methods=['GET', 'POST'])
-def select_subject():
-    if request.method == 'GET':
-        timeT = getTimeTable()
-        print("ㅏㅏㅏ")
-        #print(timeT)
-        return render_template('select_subject.html')
-    else:
-        # select = request.form['select']
-        # search = request.form['search']
-        #
-        # select_search = {
-        #     'select': select,
-        #     'search': search
-        # }
+    
+@app.route('/mySchedules_list')
+def mySchedules_get():
+    return render_template('mySchedule.html')    
 
-        all_subject = list(db.schedule.find({}))
+@app.route('/mySchedules_get/list', methods=['GET'])
+def mySchedules_list():
+    items = getAllSchedules()
+    print(items)
 
-        print("엥...")
-        print(all_subject[0]['subject'])
-        return render_template('select_subject.html') #return 값 수정필요
-
-
-
-
+    return jsonify({'result' : 'success', 'items' : items})
 
 
 
