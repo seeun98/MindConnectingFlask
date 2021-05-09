@@ -28,5 +28,7 @@
 #
 
 ## **동작 과정**
-[![학생계정 동작영상](https://img.youtube.com/vi/rrrLcRcVSCM/0.jpg)](https://www.youtube.com/watch?v=rrrLcRcVSCM) 
+### 학생계정 동작영상
+[![학생계정 동작영상](https://img.youtube.com/vi/rrrLcRcVSCM/0.jpg)](https://www.youtube.com/watch?v=rrrLcRcVSCM)
+### 교수계정 동작영상
 [![교수계정 동작영상](https://img.youtube.com/vi/3BvK5hc7cyY/0.jpg)](https://www.youtube.com/watch?v=3BvK5hc7cyY) 
