@@ -32,3 +32,22 @@
 [![학생계정 동작영상](https://img.youtube.com/vi/rrrLcRcVSCM/0.jpg)](https://www.youtube.com/watch?v=rrrLcRcVSCM)
 ### 교수계정 동작영상
 [![교수계정 동작영상](https://img.youtube.com/vi/3BvK5hc7cyY/0.jpg)](https://www.youtube.com/watch?v=3BvK5hc7cyY) 
+
+## **역할 분담**
+
+- 서채원
+    - 시간표 크롤링
+    - 시간표 담기 서버 + 디자인
+
+- 이혜린
+    - 시간표 담기 디자인
+    - 교수님 재실 여부 레이아웃
+
+- 이지연
+    - 공지 게시판
+
+- 이세은
+    - 서버 구축
+    - 로그인, 회원가입 서버, 익명 게시판 + 디자인
+    - 전체 페이지 연결
+
