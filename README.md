@@ -1,4 +1,4 @@
-# **MindConnectingFlask**
+# **MindConnecting**
 교수님과 학생 간의 소통 플랫폼 MindConnecting
 #
 ## **목차**
